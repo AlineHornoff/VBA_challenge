@@ -1,0 +1,195 @@
+Sub vba_challenge()
+
+    'Define dimension for worksheet
+    Dim ws As Worksheet
+    
+    'Define dimensions for table one
+    Dim Ticker As Integer
+    Dim Start As Long
+    Dim YearlyChange As Double
+    Dim PercentChange As Double
+    Dim TotalVolume As Double
+    Dim RowCounterTableOne As Long
+            
+    'define dimensions for Table 2
+    Dim GreatesIncreaseTicker As String
+    Dim GreatesIncrease As Double
+    Dim GreatestDecreaseTicker As String
+    Dim GreatestDecrease As Double
+    Dim GreatestTotalVolumeTicker As String
+    Dim GreatestTotalVolume As Double
+    Dim RowCounterTableTwo As Long
+    'Dim TableTwo As Integer
+        
+    
+    ' Loop for all worksheets
+    For Each ws In Worksheets
+
+
+    'Print Table Titles for each row for table one
+    ws.Range("I1").Value = "Ticker"
+    ws.Range("J1").Value = "Yearly Change"
+    ws.Range("K1").Value = "Percent Change"
+    ws.Range("L1").Value = "Total Stock Volume"
+    
+    'Print Table Titles for each row for table two
+    ws.Range("P1").Value = "Ticker"
+    ws.Range("Q1").Value = "Value"
+    ws.Range("O2").Value = "Greatest % Increase"
+    ws.Range("O3").Value = "Greatest % Decrease"
+    ws.Range("O4").Value = "Greatest Total Volume"
+    
+
+' Populate table one
+'--------------------
+    
+    'Initial Values for variable in table one
+    Start = 2
+    Ticker = 0
+    YearlyChange = 0
+    TotalVolume = 0
+
+    
+    'Total row count and loop to last row of data for table one
+    RowCounterTableOne = ws.Cells(Rows.Count, "A").End(xlUp).Row
+    For i = 2 To RowCounterTableOne
+    
+        'Print results if ticker change
+        If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then
+        
+        'Keep results in variables
+        TotalVolume = TotalVolume + ws.Cells(i, 7).Value
+        
+            'Address tickers with zero total volume
+            If TotalVolume = 0 Then
+        
+            'Print added tickers and default values to columns I to L
+            'ws.Range("I" & 2 + Ticker).Value = ws.Cells(i, 1).Value
+            'ws.Range("J" & 2 + Ticker).Value = 0
+            'ws.Range("K" & 2 + Ticker).Value = "%" & 0
+            'ws.Range("L" & 2 + Ticker).Value = 0
+        
+            Else
+            'Search and add first non-zero total volume value to Table One
+                If ws.Cells(Start, 3) = 0 Then
+                    For SearchValue = Start To i
+                        If ws.Cells(SearchValue, 3).Value <> 0 Then
+                            Start = SearchValue
+                            Exit For
+                        End If
+                    Next SearchValue
+                End If
+        
+                'Calculate yearly change of current ticker and add to second column of table one
+                YearlyChange = (ws.Cells(i, 6) - ws.Cells(Start, 3))
+                PercentChange = Round(YearlyChange / ws.Cells(Start, 3), 2)
+        
+                'Check next ticker
+                Start = i + 1
+        
+                'Print results to table one
+                ws.Range("I" & 2 + Ticker).Value = Cells(i, 1).Value
+                ws.Range("J" & 2 + Ticker).Value = Round(YearlyChange, 2)
+                ws.Range("K" & 2 + Ticker).Value = PercentChange
+                ws.Range("K" & 2 + Ticker).NumberFormat = "0.00%"
+                ws.Range("L" & 2 + Ticker).Value = TotalVolume
+        
+                'Highlight positive yearly change in green and negative yearly change in red
+                Select Case YearlyChange
+                    Case Is > 0
+                        ws.Range("J" & 2 + Ticker).Interior.ColorIndex = 4
+                    Case Is < 0
+                        ws.Range("J" & 2 + Ticker).Interior.ColorIndex = 3
+                    Case Else
+                        ws.Range("J" & 2 + Ticker).Interior.ColorIndex = 0
+                End Select
+        
+            End If
+        
+        'For every new ticker restore variable
+        Ticker = Ticker + 1
+        YearlyChange = 0
+        TotalVolume = 0
+        
+        'Add results to table one if ticker still the same
+        Else
+            TotalVolume = TotalVolume + ws.Cells(i, 7).Value
+    
+        End If
+ 
+    Next i
+ 
+ Next ws
+ 
+
+' Populate table two
+'--------------------
+   
+    ' Loop for all worksheets
+    For Each ws In Worksheets
+      
+        'Initial Values for variable in table one
+        GreatestIncrease = 0
+        GreatestDecrease = 0
+        GreatestTotalVolume = 0
+        RowCounterTableTwo = 0
+        TableTwo = 2
+        
+        
+        'First - Total row count and loop to last row of table one for table two data
+            RowCounterTableTwo = ws.Cells(Rows.Count, "K").End(xlUp).Row
+            For j = 2 To RowCounterTableTwo
+            
+            'Greatest % Increase - find greatest increase row by row, update variable if greater than previous - overwrite exitsing value
+                If ws.Cells(j + 1, 11).Value > GreatestIncrease Then
+                    GreatestIncrease = ws.Cells(j + 1, 11).Value
+                    ws.Range("Q2").Value = "%" & GreatestIncrease * 100
+                    
+                    GreatestIncreaseTicker = ws.Cells(j + 1, 9).Value
+                    ws.Range("P2").Value = GreatestIncreaseTicker
+                End If
+                
+            Next j
+            
+          
+        ' Second - Total row count and loop to last row of data for table two
+            RowCounterTableTwo = ws.Cells(Rows.Count, "K").End(xlUp).Row
+            For k = 2 To RowCounterTableTwo
+            
+            'Greatest % Increase - find greatest increase row by row, update variable if greater than previous - overwrite exitsing value
+                If ws.Cells(k + 1, 11).Value < GreatestDecrease Then
+                    GreatestDecrease = ws.Cells(k + 1, 11).Value
+                    ws.Range("Q3").Value = "%" & GreatestDecrease * 100
+                    
+                    GreatestDecreaseTicker = ws.Cells(k + 1, 9).Value
+                    ws.Range("P3").Value = GreatestDecreaseTicker
+                End If
+                
+            Next k
+            
+        ' Third - Total row count and loop to last row of data for table two
+            RowCounterTableTwo = ws.Cells(Rows.Count, "L").End(xlUp).Row
+            For l = 2 To RowCounterTableTwo
+            
+            'Greatest total volume - find greatest total volume row by row, update variable if greater than previous - overwrite exitsing value
+                If ws.Cells(l + 1, 11).Value > GreatestTotalVolume Then
+                    GreatestTotalVolume = ws.Cells(l + 1, 11).Value
+                    ws.Range("Q4").Value = GreatestTotalVolume
+                    
+                    GreatestTotalVolumeTicker = ws.Cells(l + 1, 9).Value
+                    ws.Range("P4").Value = GreatestTotalVolumeTicker
+                End If
+                
+            Next l
+        
+        'Print results to table two
+        Cells(2, "P").Value = ""
+        Cells(3, "P").Value = ""
+        Cells(4, "P").Value = ""
+        ws.Range("Q2").NumberFormat = "0.00%"
+        ws.Range("Q3").NumberFormat = "0.00%"
+        ws.Range("Q4").Value = GreatestTotalVolume
+  
+ Next ws
+  
+End Sub
